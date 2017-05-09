@@ -3,7 +3,7 @@ import evdev
 import select
 import requests
 
-base_url = "http://192.168.1.31:3000/api/v1"
+base_url = "http://localhost:3000/api/v1"
 devices = {}
 for fn in evdev.list_devices():
     dev = evdev.InputDevice(fn)
@@ -35,6 +35,15 @@ while True:
                         url = "%s/zone/current/control/previous" % base_url
                     elif code == "FASTFORWARD":
                         url = "%s/zone/current/control/next" % base_url
+                    elif code == "UP":
+                        url = "%s/zone/current/volume/relative_step/1" % base_url
+                    elif code == "DOWN":
+                        url = "%s/zone/current/volume/relative_step/-1" % base_url
+                if state == "HOLD":
+                    if code == "UP":
+                        url = "%s/zone/current/volume/relative_step/1" % base_url
+                    elif code == "DOWN":
+                        url = "%s/zone/current/volume/relative_step/-1" % base_url
             if url:
                 print(url)
                 req = requests.put(url)
