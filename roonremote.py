@@ -3,7 +3,7 @@ import evdev
 import select
 import requests
 
-base_url = "http://localhost:3000/api/v1"
+base_url = "http://media-pc:3000/api/v1"
 devices = {}
 for fn in evdev.list_devices():
     dev = evdev.InputDevice(fn)
@@ -46,4 +46,7 @@ while True:
                         url = "%s/zone/current/volume/relative_step/-1" % base_url
             if url:
                 print(url)
-                req = requests.put(url)
+                try:
+                    req = requests.put(url)
+                except:
+                    print("Request to %s failed" % (url))
