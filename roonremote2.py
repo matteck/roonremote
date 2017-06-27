@@ -4,20 +4,16 @@ import select
 import requests
 import sys
 
-base_url = "http://localhost:3001/roonAPI"
+base_url = "http://192.168.1.11:3001/roonAPI"
 zone_name = "GreenSpeakers"
 
 zones = requests.get("%s/listZones" % base_url).json()['zones']
 for z in zones.keys():
     if zones[z]['display_name'] == zone_name:
         zone_id = z
-        print(zones[z])
         output_id = zones[z]['outputs'][0]['output_id']
         break
 assert(zone_id)
-print(zone_id)
-print(output_id)
-sys.exit()
     
 devices = {}
 for fn in evdev.list_devices():
@@ -49,14 +45,16 @@ while True:
                             step = "1"
                         r = requests.get("%s/change_volume_step?outputId=%s&step=%s" % (base_url, output_id, step))
                 elif state == "DOWN":
+                    command = None
                     if code == "PLAYPAUSE":
-                        command = "pause" 
+                        command = "play_pause" 
                     elif code == "STOP":
                         command = "stop"
-                    elif code == "REWIND":
+                    elif code == "REWIND" or code == "LEFT":
                         command = "previous"
-                    elif code == "FASTFORWARD":
+                    elif code == "FASTFORWARD" or code == "RIGHT":
                         command = "next"
-                    r = requests.get("%s/%s?zoneId=%s" % (base_url, command, zone_id))
+                    if command:
+                        r = requests.get("%s/%s?zoneId=%s" % (base_url, command, zone_id))
                 # except:
                 #     print("Request to %s failed" % (url))
