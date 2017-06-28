@@ -43,7 +43,8 @@ while True:
                             step = "-1"
                         else:
                             step = "1"
-                        r = requests.get("%s/change_volume_step?outputId=%s&step=%s" % (base_url, output_id, step))
+                        try:
+                            r = requests.get("%s/change_volume_step?outputId=%s&step=%s" % (base_url, output_id, step))
                 elif state == "DOWN":
                     command = None
                     if code == "PLAYPAUSE":
@@ -55,6 +56,7 @@ while True:
                     elif code == "FASTFORWARD" or code == "RIGHT":
                         command = "next"
                     if command:
-                        r = requests.get("%s/%s?zoneId=%s" % (base_url, command, zone_id))
+                        try:
+                            r = requests.get("%s/%s?zoneId=%s" % (base_url, command, zone_id))
                 # except:
                 #     print("Request to %s failed" % (url))
