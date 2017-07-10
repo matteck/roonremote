@@ -3,7 +3,7 @@ import evdev
 import select
 import requests
 
-base_url = "http://media-pc:3000/api/v1"
+base_url = "http://192.168.1.11:3000/api/v1"
 devices = {}
 for fn in evdev.list_devices():
     dev = evdev.InputDevice(fn)
