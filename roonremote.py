@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
+
+#TODO: find out default zone from roonrest and set volume/mute accordingly
+
 import evdev
 import select
 import requests
 import subprocess
 
 
-base_url = "http://roonstation:3000/api/v1"
-myzone = "Hifi"
+roon_base_url = "http://roonstation:3000/api/v1"
+harmony_base_url = "http://m1:8282/hubs/harmony-hub/devices/channel-islands-audio-amp/commands"
+
+myzone = "default"
 devices = {}
 for fn in evdev.list_devices():
     print(fn)
@@ -31,27 +36,34 @@ while True:
                 elif state == evdev.events.KeyEvent.key_hold:
                     state = "HOLD"
                 print(code, state)
+                method = "GET"
                 if state == "DOWN":
                     if code == "PLAYPAUSE":
-                        url = "%s/zone/%s/control/playpause" % (base_url, myzone)
+                        url = "%s/zone/%s/control/playpause" % (roon_base_url, myzone)
                     elif code == "STOP":
-                        url = "%s/zone/all/control/pause" % base_url
+                        url = "%s/zone/all/control/pause" % roon_base_url
                         #url = "%s/zone/%s/control/stop" % (base_url, myzone)
                     elif code == "REWIND":
-                        url = "%s/zone/%s/control/previous" % (base_url, myzone)
+                        url = "%s/zone/%s/control/previous" % (roon_base_url, myzone)
                     elif code == "FASTFORWARD":
-                        url = "%s/zone/%s/control/next" % (base_url, myzone)
+                        url = "%s/zone/%s/control/next" % (roon_base_url, myzone)
                     elif code == "INFO":
-                        cmd = ['/root/harmonyHubCLI/bin/harmonyhub-cli', '-l', 'HarmonyHub', '-d', 'Channel Islands Audio Amp', '-c', 'Mute']
+                        method = "POST"
+                        url = "%s/mute" % harmony_base_url
                 if state == "HOLD" or state == "DOWN":
                     if code == "UP":
-                        cmd = ['/root/harmonyHubCLI/bin/harmonyhub-cli', '-l', 'HarmonyHub', '-a', 'Roon', '-c', 'Volume,Volume Up']
+                        method = "POST"
+                        url = "%s/volume-up" % harmony_base_url
                     elif code == "DOWN":
-                        cmd = ['/root/harmonyHubCLI/bin/harmonyhub-cli', '-l', 'HarmonyHub', '-a', 'Roon', '-c', 'Volume,Volume Down']
+                        method = "POST"
+                        url = "%s/volume-down" % harmony_base_url
             if url:
-                print(url)
+                print(method, url)
                 try:
-                    req = requests.get(url)
+                    if method == "GET":
+                        req = requests.get(url)
+                    else:
+                        req = requests.post(url)
                 except:
                     print("Request to %s failed" % (url))
             if cmd:
