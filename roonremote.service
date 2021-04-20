@@ -1,4 +1,5 @@
 [Service]
+ExecStartPre=/bin/sleep 30
 ExecStart=/usr/bin/python3 /root/src/roonremote/roonremote.py
 Restart=always
 StandardOutput=syslog
