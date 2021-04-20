@@ -2,10 +2,7 @@
 
 import evdev
 import select
-import requests
-import subprocess
 import roonapi
-import sys
 
 # TODO
 # - Discover server
