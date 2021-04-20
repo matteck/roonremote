@@ -1,30 +1,58 @@
 #!/usr/bin/env python3
 
-#TODO: find out default zone from roonrest and set volume/mute accordingly
-
 import evdev
 import select
 import requests
 import subprocess
+import roonapi
+import sys
 
+# TODO
+# - Discover server
+# - Set zone in extension prefences
+# - Seek within track
 
-roon_base_url = "http://roonstation:3000/api/v1"
-harmony_base_url = "http://m1:8282/hubs/harmony-hub/devices/channel-islands-audio-amp/commands"
+server = "192.168.50.125"
+zone_name = "iFi"
+token_file = "/root/.roon_token_save"
 
-myzone = "default"
+appinfo = {
+    "extension_id": "roonremote",
+    "display_name": "Remote control with OSMC remote",
+    "display_version": "0.0.1",
+    "publisher": "Matthew Eckhaus",
+    "email": "matteck@github",
+}
+
+# Can be None if you don't yet have a token
+try:
+    token = open(token_file).read()
+except FileNotFoundError:
+    token = None
+
+api = roonapi.RoonApi(appinfo, token, server)
+
+with open(token_file, "w") as f:
+    f.write(api.token)
+
+zones = api.zones
+output_id = [
+    output["zone_id"]
+    for output in zones.values()
+    if output["display_name"] == zone_name
+][0]
+print(output_id)
+
 devices = {}
 for fn in evdev.list_devices():
     print(fn)
     dev = evdev.InputDevice(fn)
-    if dev.name.find('HBGIC') >= 0:
-        devices[dev.fd] = dev
+    devices[dev.fd] = dev
 print(devices)
 while True:
     r, w, x = select.select(devices, [], [])
     for fd in r:
         for event in devices[fd].read():
-            url = None
-            cmd = None
             if event.type == evdev.ecodes.EV_KEY:
                 keyev = evdev.categorize(event)
                 code = keyev.keycode[4:]
@@ -36,36 +64,22 @@ while True:
                 elif state == evdev.events.KeyEvent.key_hold:
                     state = "HOLD"
                 print(code, state)
-                method = "GET"
                 if state == "DOWN":
                     if code == "PLAYPAUSE":
-                        url = "%s/zone/%s/control/playpause" % (roon_base_url, myzone)
+                        api.playback_control(output_id, "playpause")
                     elif code == "STOP":
-                        url = "%s/zone/all/control/pause" % roon_base_url
-                        #url = "%s/zone/%s/control/stop" % (base_url, myzone)
+                        api.playback_control(output_id, "stop")
                     elif code == "REWIND":
-                        url = "%s/zone/%s/control/previous" % (roon_base_url, myzone)
+                        api.playback_control(output_id, "previous")
                     elif code == "FASTFORWARD":
-                        url = "%s/zone/%s/control/next" % (roon_base_url, myzone)
-                    elif code == "INFO":
-                        method = "POST"
-                        url = "%s/mute" % harmony_base_url
-                if state == "HOLD" or state == "DOWN":
-                    if code == "UP":
-                        method = "POST"
-                        url = "%s/volume-up" % harmony_base_url
-                    elif code == "DOWN":
-                        method = "POST"
-                        url = "%s/volume-down" % harmony_base_url
-            if url:
-                print(method, url)
-                try:
-                    if method == "GET":
-                        req = requests.get(url)
-                    else:
-                        req = requests.post(url)
-                except:
-                    print("Request to %s failed" % (url))
-            if cmd:
-                print(" ".join(cmd))
-                subprocess.call(cmd)
+                        api.playback_control(output_id, "next")
+                    #elif code == "INFO":
+                        #method = "POST"
+                        #url = "%s/mute" % harmony_base_url
+                #if state == "HOLD" or state == "DOWN":
+                    #if code == "UP":
+                        #method = "POST"
+                        #url = "%s/volume-up" % harmony_base_url
+                    #elif code == "DOWN":
+                        #method = "POST"
+                        #url = "%s/volume-down" % harmony_base_url

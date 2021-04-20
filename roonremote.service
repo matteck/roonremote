@@ -1,5 +1,5 @@
 [Service]
-ExecStart=/usr/bin/python3 /root/src/roonremote/roonremote2.py
+ExecStart=/usr/bin/python3 /root/src/roonremote/roonremote.py
 Restart=always
 StandardOutput=syslog
 StandardError=syslog
