@@ -1,5 +1,20 @@
 #!/usr/bin/env python3
 
+# Codes:
+# BACK
+# CONTEXT_MENU
+# DOWN
+# ENTER
+# FASTFORWARD
+# HOME
+# INFO
+# LEFT
+# PLAYPAUSE
+# REWIND
+# RIGHT
+# STOP
+# UP
+
 import evdev
 import select
 import roonapi
@@ -60,7 +75,7 @@ while True:
                     state = "UP"
                 elif state == evdev.events.KeyEvent.key_hold:
                     state = "HOLD"
-                print(code, state)
+                #print(code, state)
                 if state == "DOWN":
                     if code == "PLAYPAUSE":
                         api.playback_control(output_id, "playpause")
@@ -70,13 +85,9 @@ while True:
                         api.playback_control(output_id, "previous")
                     elif code == "FASTFORWARD":
                         api.playback_control(output_id, "next")
-                    #elif code == "INFO":
-                        #method = "POST"
-                        #url = "%s/mute" % harmony_base_url
-                #if state == "HOLD" or state == "DOWN":
-                    #if code == "UP":
-                        #method = "POST"
-                        #url = "%s/volume-up" % harmony_base_url
-                    #elif code == "DOWN":
-                        #method = "POST"
-                        #url = "%s/volume-down" % harmony_base_url
+                    elif code == "INFO":
+                        # Attach to currently playing zone
+                        zones = api.zones
+                        for output in zones.values():
+                            if output['state'] == "playing":
+                                output_id = output["zone_id"]
