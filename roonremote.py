@@ -48,11 +48,12 @@ with open(token_file, "w") as f:
     f.write(api.token)
 
 zones = api.zones
-output_id = [
-    output["zone_id"]
-    for output in zones.values()
-    if output["display_name"] == zone_name
-][0]
+# Attach to currently playing zone, or arbitrarily choose last if nothing is playing
+zones = api.zones
+for output in zones.values():
+    output_id = output["zone_id"]
+    if output['state'] == "playing":
+        break
 print(output_id)
 
 devices = {}
@@ -86,8 +87,10 @@ while True:
                     elif code == "FASTFORWARD":
                         api.playback_control(output_id, "next")
                     elif code == "INFO":
-                        # Attach to currently playing zone
+                        # Attach to currently playing zone, or no change if nothing is playing
                         zones = api.zones
                         for output in zones.values():
                             if output['state'] == "playing":
                                 output_id = output["zone_id"]
+                                print(output_id)
+                                break
