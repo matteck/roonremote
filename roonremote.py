@@ -18,6 +18,7 @@
 import evdev
 import select
 import roonapi
+import subprocess
 
 # TODO
 # - Discover server
@@ -76,8 +77,11 @@ while True:
                     state = "UP"
                 elif state == evdev.events.KeyEvent.key_hold:
                     state = "HOLD"
-                #print(code, state)
+                print(code, state)
                 if state == "DOWN":
+                    if code == "HOME":
+                        subprocess.run(['ssh', '-i', '/root/.ssh/id_auto_home', 'root@portpi', 'shutdown -P now'])
+                        subprocess.run(["ls", "-l"])
                     if code == "PLAYPAUSE":
                         api.playback_control(output_id, "playpause")
                     elif code == "STOP":
