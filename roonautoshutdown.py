@@ -10,7 +10,7 @@ server = "192.168.50.125"
 zone_name = "iFi"
 token_file = "/root/.roon_token_save"
 flag_file = "/root/.roon_playing_flag"
-shutdown_delay_min = 20
+shutdown_delay_min = 1
 this_zone_name = "iFi"
 
 appinfo = {
@@ -45,17 +45,16 @@ for output in zones.values():
             break
 
 if playing == True:
-    with open(flag_file, "w") as f:
-        flag_path.touch()
+    flag_path.touch()
 else:
     try:
-        with open(flag_file, "r") as f:
-            # get ctime
-            ctime = flag_path.stat().st_ctime
+        # get ctime
+        ctime = flag_path.stat().st_ctime
+    except FileNotFoundError:
+        print("Flag file not found. Creating ", flag_file)
+        flag_path.touch()
+    else:
         if ctime < time.time() - shutdown_delay_min * 60:
+            print("Shutting down PortPi")
             flag_path.unlink()
             subprocess.run(['shutdown','-P','now'])
-            print("Shutting down PortPi")
-    except FileNotFoundError:
-        print("Flag file not found. Creating", flag_file)
-        flag_path.touch()
