@@ -77,15 +77,18 @@ while True:
                     state = "UP"
                 elif state == evdev.events.KeyEvent.key_hold:
                     state = "HOLD"
-                print(code, state)
+                #print(code, state)
                 if state == "DOWN":
                     if code == "HOME":
                         subprocess.run(['ssh', '-i', '/root/.ssh/id_auto_home', 'root@portpi', 'shutdown -P now'])
-                        subprocess.run(["ls", "-l"])
                     if code == "PLAYPAUSE":
                         api.playback_control(output_id, "playpause")
                     elif code == "STOP":
-                        api.playback_control(output_id, "stop")
+                        # Stop all playback
+                        zones = api.zones
+                        for output in zones.values():
+                            output_id = output["zone_id"]
+                            api.playback_control(output_id, "stop")
                     elif code == "REWIND":
                         api.playback_control(output_id, "previous")
                     elif code == "FASTFORWARD":
@@ -96,5 +99,5 @@ while True:
                         for output in zones.values():
                             if output['state'] == "playing":
                                 output_id = output["zone_id"]
-                                print(output_id)
+                                #print(output_id)
                                 break
