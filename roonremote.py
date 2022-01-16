@@ -25,7 +25,8 @@ import subprocess
 # - Set zone in extension prefences
 # - Seek within track
 
-server = "192.168.50.125"
+host = "192.168.50.125"
+port = 9330
 zone_name = "iFi"
 token_file = "/root/.roon_token_save"
 
@@ -43,7 +44,7 @@ try:
 except FileNotFoundError:
     token = None
 
-api = roonapi.RoonApi(appinfo, token, server)
+api = roonapi.RoonApi(appinfo, token, host, port)
 
 with open(token_file, "w") as f:
     f.write(api.token)
