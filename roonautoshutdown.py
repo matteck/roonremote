@@ -6,11 +6,12 @@ from pathlib import Path
 import time
 import logging
 
-server = "192.168.50.125"
+host = "192.168.50.125"
+port = 9330
 zone_name = "iFi"
 token_file = "/root/.roon_token_save"
 flag_file = "/root/.roon_playing_flag"
-shutdown_delay_min = 20
+shutdown_delay_min = 60
 this_zone_name = "iFi"
 
 appinfo = {
@@ -30,7 +31,8 @@ except FileNotFoundError:
     token = None
 
 roonapi.LOGGER.setLevel(logging.WARN)
-api = roonapi.RoonApi(appinfo, token, server)
+#print("connecting to server")
+api = roonapi.RoonApi(appinfo, token, host, port)
 
 with open(token_file, "w") as f:
     f.write(api.token)
@@ -55,6 +57,6 @@ else:
         flag_path.touch()
     else:
         if ctime < time.time() - shutdown_delay_min * 60:
-            #print("Shutting down PortPi")
+            print("Shutting down PortPi")
             flag_path.unlink()
             subprocess.run(['/sbin/shutdown','-P','now'])
