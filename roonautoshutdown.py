@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 
+# Shut down 5 minutes after DAC is disconnected
+
 import subprocess
 from pathlib import Path
 import time
+from os import path
 
 card = '/proc/asound/card1/stream0'
 flag_file = "/root/.roon_playing_flag"
-shutdown_delay_min = 60
+shutdown_delay_min = 5
 
 flag_path = Path(flag_file)
 
-completed_process  = subprocess.run(["grep", "-i", "Status: Running", card], capture_output=True)
-if completed_process.returncode == 0:
-    #print("Playing")
+if path.exists("/proc/asound/card1/stream0") == True:
+    #print("DAC is on")
     flag_path.touch()
 else:
     try:
