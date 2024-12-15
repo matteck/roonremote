@@ -51,12 +51,12 @@ with open(token_file, "w") as f:
 
 zones = api.zones
 # Attach to currently playing zone, or arbitrarily choose last if nothing is playing
-zones = api.zones
-for output in zones.values():
-    output_id = output["zone_id"]
-    if output['state'] == "playing":
+for zone in zones.values():
+    zone_id = zone["zone_id"]
+    if zone['state'] == "playing":
         break
-print(output_id)
+print("Here 1", zone_id)
+print("here 2", zone['outputs'])
 
 devices = {}
 for fn in evdev.list_devices():
@@ -64,6 +64,16 @@ for fn in evdev.list_devices():
     dev = evdev.InputDevice(fn)
     devices[dev.fd] = dev
 print(devices)
+
+def vol_change(incr):
+    outputs = zone['outputs']
+    for output in outputs:
+        if 'volume' in output:
+            output_id = output['output_id']
+            print("Doing vol change")
+            api.change_volume_raw(output_id, incr, 'relative')
+            print("Done vol change")
+
 while True:
     r, w, x = select.select(devices, [], [])
     for fd in r:
@@ -71,6 +81,7 @@ while True:
             if event.type == evdev.ecodes.EV_KEY:
                 keyev = evdev.categorize(event)
                 code = keyev.keycode[4:]
+                print(code)
                 state = keyev.keystate
                 if state == evdev.events.KeyEvent.key_down:
                     state = "DOWN"
@@ -83,22 +94,26 @@ while True:
                     if code == "HOME":
                         subprocess.run(['ssh', '-i', '/root/.ssh/id_auto_home', 'root@portpi', 'shutdown -P now'])
                     if code == "PLAYPAUSE":
-                        api.playback_control(output_id, "playpause")
+                        api.playback_control(zone_id, "playpause")
                     elif code == "STOP":
                         # Stop all playback
                         zones = api.zones
-                        for output in zones.values():
-                            output_id = output["zone_id"]
-                            api.playback_control(output_id, "stop")
+                        for zone in zones.values():
+                            zone_id2 = output["zone_id"]
+                            api.playback_control(zone_id2, "stop")
                     elif code == "REWIND":
-                        api.playback_control(output_id, "previous")
+                        api.playback_control(zone_id, "previous")
                     elif code == "FASTFORWARD":
-                        api.playback_control(output_id, "next")
+                        api.playback_control(zone_id, "next")
                     elif code == "INFO":
                         # Attach to currently playing zone, or no change if nothing is playing
                         zones = api.zones
-                        for output in zones.values():
-                            if output['state'] == "playing":
-                                output_id = output["zone_id"]
-                                #print(output_id)
+                        for zone in zones.values():
+                            if zone['state'] == "playing":
+                                zone_id = zone["zone_id"]
+                                print(zone_id)
                                 break
+                    elif code == "DOWN":
+                        vol_change(-1)
+                    elif code == "UP":
+                        vol_change(1)
